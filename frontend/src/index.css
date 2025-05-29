@@ -25,41 +25,40 @@
   -ms-overflow-style: none;
 }
 
-.rsw-toolbar{
- border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
- background: none !important;
+.rsw-toolbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  background: none !important;
 }
 
 .rsw-toolbar button[title="HTML mode"] {
   display: none;
 }
 
-.rsw-ce{
+.rsw-ce {
   height: 55vh !important;
   max-height: 100% !important;
 }
 
-.rsw-btn{
+.rsw-btn {
   color: white !important;
 }
 
-.rsw-btn:hover{
+.rsw-btn:hover {
   color: black !important;
 }
 
-.rsw-dd option{
+.rsw-dd option {
   color: black !important;
 }
-
 
 /* If you're using Tailwind, or styles are missing, add this manually */
- .ql-editor h1 {
+.ql-editor h1 {
   font-size: 2.25rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
- .ql-editor h2 {
+.ql-editor h2 {
   font-size: 1.875rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
@@ -78,4 +77,3 @@
 }
 
 /* Add more as needed */
-
