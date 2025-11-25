@@ -57,7 +57,7 @@ Ensure you have the following installed:
 2. **Build and run the containers:**
 
    ```bash
-   docker-compose -f docker-compose.dev.yml up --build
+   docker-compose -f docker-compose.yml up --build
    ```
 
    This command will set up the frontend, backend, and PostgreSQL database.
