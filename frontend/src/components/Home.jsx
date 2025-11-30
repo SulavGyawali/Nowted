@@ -40,6 +40,9 @@ const Home = (props) => {
       setNewNote={props.setNewNote}
       setUpdatedNote={props.setUpdatedNote}
       handleAlert={props.handleAlert}
+      shareUserId={props.shareUserId}
+      setShareUserId={props.setShareUserId}
+      handleShare={props.handleShare}
       />
     </div>
   )

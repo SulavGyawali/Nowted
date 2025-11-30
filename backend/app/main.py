@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import users, auth, notes
+from .routers import users, auth, notes, websocket
 from dotenv import load_dotenv
 import os
 import psycopg2 as pg
@@ -18,7 +18,7 @@ POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_PORT= os.getenv("POSTGRES_PORT")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 # print(POSTGRES_USER)
 
 app = FastAPI()
@@ -54,6 +54,9 @@ while True:
         cur.execute(
             "CREATE TABLE IF NOT EXISTS users (id serial PRIMARY KEY, username VARCHAR(50), email VARCHAR(50), password VARCHAR(100))"
         )
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS note_users (note_id INTEGER REFERENCES notes(id) ON DELETE CASCADE, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,PRIMARY KEY (note_id, user_id))"
+        )
         conn.commit()
         break
     except Exception as e:
@@ -72,6 +75,7 @@ async def read_root():
 app.include_router(users.router)
 app.include_router(auth.router)
 app.include_router(notes.router)
+app.include_router(websocket.router)
 
 
 if __name__ == "__main__":

@@ -34,6 +34,7 @@ function App() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("");
+  const [shareUserId, setShareUserId] = useState("");
 
   const handleCreateUser = async (newUser) => {
     try {
@@ -166,6 +167,27 @@ function App() {
       console.error("Error updating note:", error);
     }
   }
+
+  const handleShare = async (noteId, userId) => {
+    try {
+      const data = {
+        note_id: noteId,
+        user_id: userId,
+      };
+      const response = await axios.post("http://localhost:8000/notes/share", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      handleAlert("Note shared successfully!", "success");
+    } catch (error) {
+      handleAlert("Error sharing note!", "error");
+      console.error("Error sharing note:", error);
+    }
+    console.log("Sharing note:", noteId, "with user:", userId, "response:", response);
+
+  } 
 
   useEffect(() => {
     if (updatedNote) {
@@ -413,6 +435,9 @@ function App() {
             currentUser={currentUser}
             setLogout={setLogout}
             handleAlert={handleAlert}
+            shareUserId={shareUserId}
+            setShareUserId={setShareUserId}
+            handleShare={handleShare}
           />
         }
       />

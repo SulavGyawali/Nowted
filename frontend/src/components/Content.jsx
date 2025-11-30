@@ -5,6 +5,7 @@ import Editor from "react-simple-wysiwyg";
 import { use, useEffect, useState } from "react";
 import { FaRegHeart } from "react-icons/fa";
 import { FiTrash } from "react-icons/fi";
+import { FiShare } from "react-icons/fi";
 import { IoArchiveOutline } from "react-icons/io5";
 import { FiFileText } from "react-icons/fi";
 
@@ -20,6 +21,7 @@ const Content = (props) => {
   const [favourite, setFavourite] = useState(false);
   const [archived, setArchived] = useState(false);
   const [trash, setTrash] = useState(false);
+  const [share, setShare] = useState(false);
 
   const handleMouseLeaveDots = () => {
     setMouseInDots(false);
@@ -43,10 +45,6 @@ const Content = (props) => {
 
   const handleSave = () => {
     if (props.currentNoteId) {
-      console.log("Saving existing note with ID:", props.currentNote.id);
-      console.log("favourite:", favourite);
-      console.log("archived:", archived);
-      console.log("trash:", trash);
       props.setUpdatedNote({
         title: title,
         description: value,
@@ -123,7 +121,7 @@ const Content = (props) => {
   }, [title, value, props.currentNote, favourite, archived, trash]);
 
   return (
-    <div className="w-[55%] h-[100%] flex flex-col p-2 px-7  ">
+    <div className="w-[55%] h-[100%] flex flex-col p- px-7  ">
       {props.currentNote ? (
         <div>
           <div className="box1 mt-7 flex justify-between text-2xl font-medium">
@@ -139,7 +137,35 @@ const Content = (props) => {
               onMouseLeave={handleMouseLeaveDots}
             />
             <div
-              className={`more text-white w-[15vw] flex flex-col fixed right-[3vw] bottom-[calc(100vh-30vh)] bg-neutral-800 rounded-lg gap-2  transition-opacity text-lg duration-300   ${
+              className={`share text-white w-[15vw] flex flex-col fixed right-[20vw] bottom-[calc(100vh-35vh)] bg-neutral-800 rounded-lg gap-2  transition-opacity text-xl duration-300   ${
+                share ? "opacity-100 z-100" : "opacity-0 -z-100"
+              }`}
+              onMouseLeave={() => setShare(false)}
+            >
+              <div className="title  w-[100%] h-[30%] p-2 pt-4  rounded-lg flex items-center gap-2 justify-center">
+                Enter id of User
+              </div>
+              <div className="input w-[100%] h-[30%] p-2   rounded-lg flex items-center gap-2 justify-center">
+                <input
+                  type="text"
+                  className="w-[90%] border border-white rounded-lg pl-2"
+                  value={props.shareUserId}
+                  onChange={(e) => props.setShareUserId(e.target.value)}
+                />
+              </div>
+              <div className="button  w-[100%] h-[40%] p-2  pb-4 rounded-lg flex items-center gap-2 justify-center">
+                <button
+                  className="w-[50%] h-[60%] bg-white text-black text-lg font-medium cursor-pointer hover:bg-gray-200"
+                  onClick={() => {
+                    props.handleShare(props.currentNoteId, props.shareUserId);
+                  }}
+                >
+                  Share
+                </button>
+              </div>
+            </div>
+            <div
+              className={`more text-white w-[15vw] flex flex-col fixed right-[3vw] bottom-[calc(100vh-35vh)] bg-neutral-800 rounded-lg gap-2  transition-opacity text-lg duration-300   ${
                 showMore ? "opacity-100 z-100" : "opacity-0 -z-100"
               }`}
               onMouseEnter={handleMouseEnterSettings}
@@ -161,6 +187,15 @@ const Content = (props) => {
                 }}
               >
                 <IoArchiveOutline className="text-xl " /> Archive
+              </div>
+              <div
+                className="fav hover:bg-neutral-700 w-[100%] h-[50%] p-2 pl-4 pt-4 rounded-lg flex items-center gap-2 cursor-pointer"
+                onMouseDown={() => {
+                  setShare(!share);
+                }}
+              >
+                <FiShare className="text-xl " />
+                Share Note
               </div>
               <div className="separator w-[95%] h-[0.5px] mx-auto bg-neutral-600"></div>
               <div

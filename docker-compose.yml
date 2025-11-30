@@ -1,31 +1,31 @@
 
 
 services:
-  backend:
-    build: ./backend
-    container_name: nowted-backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      - DATABASE_URL=postgresql://admin:1@db:5432/notes
-    volumes:
-      - ./backend:/app
-    restart: always
+  # backend:
+  #   build: ./backend
+  #   container_name: nowted-backend
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     - DATABASE_URL=postgresql://admin:1@db:5432/notes
+  #   volumes:
+  #     - ./backend:/app
+  #   restart: always
 
-  frontend:
-    build: ./frontend
-    container_name: nowted-frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend:/app
-    stdin_open: true
-    tty: true
-    restart: always
+  # frontend:
+  #   build: ./frontend
+  #   container_name: nowted-frontend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   volumes:
+  #     - ./frontend:/app
+  #   stdin_open: true
+  #   tty: true
+  #   restart: always
 
   db:
     image: postgres:16

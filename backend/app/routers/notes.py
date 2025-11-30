@@ -14,7 +14,6 @@ async def create_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     new_note = models.Notes(**note.model_dump())
-    print(new_note)
     new_note.user_id = current_user.id
     new_note.author = current_user.username
     new_note.title = note.title
@@ -23,11 +22,13 @@ async def create_notes(
     new_note.favourite = note.favourite if note.favourite is not None else False
     new_note.archive = note.archive if note.archive is not None else False
     new_note.trash = note.trash if note.trash is not None else False
-    #
-    print(new_note)
     db.add(new_note)
     db.commit()
     db.refresh(new_note)
+
+    note_user_entry = models.NoteUsers(note_id=new_note.id, user_id=current_user.id)
+    db.add(note_user_entry)
+    db.commit()
     return new_note
 
 
@@ -36,7 +37,13 @@ async def read_notes(
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
-    notes = db.query(models.Notes).filter(models.Notes.user_id == current_user.id).all()
+    
+    notes = (
+        db.query(models.Notes)
+        .join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        .filter(models.NoteUsers.user_id == current_user.id)
+        .all()
+    )
     if notes is []:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No notes found"
@@ -51,8 +58,8 @@ async def read_note(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     note = (
-        db.query(models.Notes)
-        .filter(models.Notes.id == note_id, models.Notes.user_id == current_user.id)
+        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        .filter(models.Notes.id == note_id, models.NoteUsers.user_id == current_user.id)
         .first()
     )
     if note is None:
@@ -68,8 +75,10 @@ async def read_favourite_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes)
-        .filter(models.Notes.user_id == current_user.id, models.Notes.favourite == True)
+        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        .filter(
+            models.NoteUsers.user_id == current_user.id, models.Notes.favourite == True
+        )
         .all()
     )
     if notes is []:
@@ -85,8 +94,10 @@ async def read_archived_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes)
-        .filter(models.Notes.user_id == current_user.id, models.Notes.archive == True)
+        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        .filter(
+            models.NoteUsers.user_id == current_user.id, models.Notes.archive == True
+        )
         .all()
     )
     if notes is []:
@@ -102,8 +113,8 @@ async def read_trash_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes)
-        .filter(models.Notes.user_id == current_user.id, models.Notes.trash == True)
+        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        .filter(models.NoteUsers.user_id == current_user.id, models.Notes.trash == True)
         .all()
     )
     if notes is []:
@@ -120,9 +131,10 @@ async def read_notes_by_folder(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes)
+        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
         .filter(
-            models.Notes.user_id == current_user.id, models.Notes.folder == folder_name
+            models.NoteUsers.user_id == current_user.id,
+            models.Notes.folder == folder_name,
         )
         .all()
     )
@@ -145,7 +157,15 @@ async def delete_note(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
-    if note.user_id != current_user.id:
+    note_user = (
+        db.query(models.NoteUsers)
+        .filter(
+            models.NoteUsers.note_id == note_id,
+            models.NoteUsers.user_id == current_user.id,
+        )
+        .first()
+    )
+    if current_user.id != note_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this note",
@@ -163,16 +183,20 @@ async def update_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     note_query = db.query(models.Notes).filter(models.Notes.id == note_id)
+    note_user = (
+        db.query(models.NoteUsers)
+        .filter(
+            models.NoteUsers.note_id == note_id,
+            models.NoteUsers.user_id == current_user.id,
+        )
+        .first()
+    )
     if note_query.first() is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
-    if note_query.first().user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update this note",
-        )
-    if note_query.first().author != current_user.username:
+
+    if current_user.id != note_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update this note",
@@ -181,3 +205,34 @@ async def update_notes(
 
     db.commit()
     return note_query.first()
+
+@router.post("/share", status_code=status.HTTP_201_CREATED, response_model=schemas.NoteShare)
+async def share_note(
+    share_data: schemas.NoteShare,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(oauth2.get_current_user),
+):
+    print(share_data)
+    note = db.query(models.Notes).filter(models.Notes.id == share_data.note_id).first()
+    if note is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
+        )
+    note_user = (
+        db.query(models.NoteUsers)
+        .filter(
+            models.NoteUsers.note_id == share_data.note_id,
+            models.NoteUsers.user_id == current_user.id,
+        )
+        .first()
+    )
+    if current_user.id != note_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to share this note",
+        )
+    shared_entry = models.NoteUsers(note_id=share_data.note_id, user_id=share_data.user_id)
+    db.add(shared_entry)
+    db.commit()
+    print("Shared successfully")
+    return share_data

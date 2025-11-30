@@ -28,3 +28,8 @@ class Notes(Base):
     trash = Column(Boolean, default=False)
     user = relationship("User", back_populates="notes")
 
+class NoteUsers(Base):
+    __tablename__ = "note_users"
+    
+    note_id = Column(Integer, ForeignKey("notes.id", ondelete="CASCADE"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)

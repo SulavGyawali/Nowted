@@ -72,3 +72,7 @@ class TokenData(BaseModel):
 class TokenVerify(BaseModel):
     valid: bool
     reason: str | None = None
+
+class NoteShare(BaseModel):
+    note_id: int
+    user_id: int
