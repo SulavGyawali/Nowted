@@ -146,7 +146,7 @@ function App() {
         trash: updatedNote.trash || false,
       };
       const response = await axios.put(
-        `http://localhost:8000/notes/${noteId}`,
+        `http://localhost:8000/notes/${noteId}/buffer`,
         data,
         {
           headers: {

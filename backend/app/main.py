@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import users, auth, notes, websocket
+from .routers import users, auth, notes, websocket, notes_buffer
 from dotenv import load_dotenv
 import os
 import psycopg2 as pg
@@ -8,6 +8,8 @@ import time
 from .database import engine
 from . import models
 from fastapi.middleware.cors import CORSMiddleware
+import threading
+from .routers import notes_buffer
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -65,6 +67,11 @@ while True:
         exit()
         time.sleep(5)
 
+@app.on_event("startup")
+async def star_redis_worker():
+    thread = threading.Thread(target=notes_buffer.flush_redis_to_db, args=(5,))
+    thread.daemon = True
+    thread.start()
 
 # Root endpoint
 @app.get("/")
@@ -76,6 +83,7 @@ app.include_router(users.router)
 app.include_router(auth.router)
 app.include_router(notes.router)
 app.include_router(websocket.router)
+app.include_router(notes_buffer.router)
 
 
 if __name__ == "__main__":

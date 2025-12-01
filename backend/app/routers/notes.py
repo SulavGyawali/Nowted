@@ -3,6 +3,8 @@ from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from .. import models, schemas, oauth2
 from ..database import get_db
+from .notes_buffer import redis_client
+import json
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
@@ -37,7 +39,7 @@ async def read_notes(
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
-    
+
     notes = (
         db.query(models.Notes)
         .join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
@@ -57,8 +59,29 @@ async def read_note(
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
+    redis_key = f"note:{note_id}:user:{current_user.id}"
+
+    note_json = redis_client.get(redis_key)
+    if note_json:
+
+        print(note_json)
+        note_data = schemas.Note.model_validate_json(note_json)
+        print(note_data)
+        return schemas.Note(
+            id=note_id,
+            title=note_data.title,
+            description=note_data.description,
+            favourite=note_data.favourite,
+            archive=note_data.archive,
+            trash=note_data.trash,
+            folder=note_data.folder,
+            created_at=note_data.created_at,
+            updated_at=note_data.updated_at,
+            user_id=current_user.id,
+        )
     note = (
-        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        db.query(models.Notes)
+        .join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
         .filter(models.Notes.id == note_id, models.NoteUsers.user_id == current_user.id)
         .first()
     )
@@ -75,7 +98,8 @@ async def read_favourite_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        db.query(models.Notes)
+        .join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
         .filter(
             models.NoteUsers.user_id == current_user.id, models.Notes.favourite == True
         )
@@ -94,7 +118,8 @@ async def read_archived_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        db.query(models.Notes)
+        .join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
         .filter(
             models.NoteUsers.user_id == current_user.id, models.Notes.archive == True
         )
@@ -113,7 +138,8 @@ async def read_trash_notes(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        db.query(models.Notes)
+        .join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
         .filter(models.NoteUsers.user_id == current_user.id, models.Notes.trash == True)
         .all()
     )
@@ -131,7 +157,8 @@ async def read_notes_by_folder(
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
     notes = (
-        db.query(models.Notes).join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
+        db.query(models.Notes)
+        .join(models.NoteUsers, models.Notes.id == models.NoteUsers.note_id)
         .filter(
             models.NoteUsers.user_id == current_user.id,
             models.Notes.folder == folder_name,
@@ -206,7 +233,10 @@ async def update_notes(
     db.commit()
     return note_query.first()
 
-@router.post("/share", status_code=status.HTTP_201_CREATED, response_model=schemas.NoteShare)
+
+@router.post(
+    "/share", status_code=status.HTTP_201_CREATED, response_model=schemas.NoteShare
+)
 async def share_note(
     share_data: schemas.NoteShare,
     db: Session = Depends(get_db),
@@ -231,7 +261,9 @@ async def share_note(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to share this note",
         )
-    shared_entry = models.NoteUsers(note_id=share_data.note_id, user_id=share_data.user_id)
+    shared_entry = models.NoteUsers(
+        note_id=share_data.note_id, user_id=share_data.user_id
+    )
     db.add(shared_entry)
     db.commit()
     print("Shared successfully")

@@ -2,7 +2,7 @@ import { CiCircleMore } from "react-icons/ci";
 import { MdOutlineCalendarMonth } from "react-icons/md";
 import { FaRegFolder, FaRegCopy } from "react-icons/fa";
 import Editor from "react-simple-wysiwyg";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { FaRegHeart } from "react-icons/fa";
 import { FiTrash } from "react-icons/fi";
 import { FiShare } from "react-icons/fi";
@@ -22,6 +22,8 @@ const Content = (props) => {
   const [archived, setArchived] = useState(false);
   const [trash, setTrash] = useState(false);
   const [share, setShare] = useState(false);
+
+  const timeoutRef = useRef(null);
 
   const handleMouseLeaveDots = () => {
     setMouseInDots(false);
@@ -105,7 +107,8 @@ const Content = (props) => {
   }, [props.currentNote]);
 
   useEffect(() => {
-    if (props.currentNote) {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
       if (
         props.currentNote.title !== title ||
         props.currentNote.description !== value ||
@@ -113,15 +116,14 @@ const Content = (props) => {
         props.currentNote.archive !== archived ||
         props.currentNote.trash !== trash
       ) {
-        setShowSave(true);
-      } else {
-        setShowSave(false);
+        handleSave();
       }
-    }
+    }, 1000);
+    return () => clearTimeout(timeoutRef.current);
   }, [title, value, props.currentNote, favourite, archived, trash]);
 
   return (
-    <div className="w-[55%] h-[100%] flex flex-col p- px-7  ">
+    <div className="w-[55%] h-[100%] flex flex-col px-7">
       {props.currentNote ? (
         <div>
           <div className="box1 mt-7 flex justify-between text-2xl font-medium">
@@ -137,9 +139,10 @@ const Content = (props) => {
               onMouseLeave={handleMouseLeaveDots}
             />
             <div
-              className={`share text-white w-[15vw] flex flex-col fixed right-[20vw] bottom-[calc(100vh-35vh)] bg-neutral-800 rounded-lg gap-2  transition-opacity text-xl duration-300   ${
-                share ? "opacity-100 z-100" : "opacity-0 -z-100"
-              }`}
+              className={`share text-white w-[15vw] flex flex-col fixed right-0 mr-[20%] 
+                top-10 bg-neutral-800 rounded-lg gap-2  transition-opacity text-xl duration-300   ${
+                  share ? "opacity-100 z-100" : "opacity-0 -z-100"
+                }`}
               onMouseLeave={() => setShare(false)}
             >
               <div className="title  w-[100%] h-[30%] p-2 pt-4  rounded-lg flex items-center gap-2 justify-center">
@@ -165,7 +168,7 @@ const Content = (props) => {
               </div>
             </div>
             <div
-              className={`more text-white w-[15vw] flex flex-col fixed right-[3vw] bottom-[calc(100vh-35vh)] bg-neutral-800 rounded-lg gap-2  transition-opacity text-lg duration-300   ${
+              className={`more text-white w-[15vw] flex flex-col fixed right-0 mr-[3%] mt-1 bg-neutral-800 rounded-lg gap-2  transition-opacity text-lg duration-300   ${
                 showMore ? "opacity-100 z-100" : "opacity-0 -z-100"
               }`}
               onMouseEnter={handleMouseEnterSettings}
@@ -244,16 +247,6 @@ const Content = (props) => {
               style={{ background: "none" }}
               className="ql-editor overflow-y-scroll scrollbar"
             ></Editor>
-          </div>
-          <div className="confirm flex w-[100%] justify-end mt-5">
-            <button
-              className={`w-[10vw] h-[5vh] bg-white text-black text-xl font-medium cursor-pointer hover:bg-gray-200 ${
-                showSave ? "" : "hidden"
-              }`}
-              onClick={handleSave}
-            >
-              Save
-            </button>
           </div>
         </div>
       ) : (

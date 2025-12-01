@@ -221,6 +221,9 @@ const Menu = (props) => {
             <div className="email opacity-50">
               {props.currentUser ? props.currentUser.email : ""}
             </div>
+            <div className="id opacity-50 text-sm">
+              ID: {props.currentUser ? props.currentUser.id : ""}
+            </div>
           </div>
         </div>
 
@@ -232,7 +235,7 @@ const Menu = (props) => {
           />
         </div>
         <div
-          className={`settings flex flex-col fixed left-[18vw] top-[calc(100vh-22vh)] bg-neutral-800 rounded-lg gap-2  transition-opacity duration-300  ${
+          className={`settings flex flex-col fixed ml-[19%] mb-20 bg-neutral-800 rounded-lg gap-2  transition-opacity duration-300  ${
             showSettings ? "opacity-100 z-100" : "opacity-0 -z-100"
           }`}
           onMouseEnter={handleMouseEnterSettings}
