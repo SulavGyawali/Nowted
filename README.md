@@ -1,6 +1,9 @@
 # 📝 Nowted
 
-A full-stack Notes application built with **React** and **Tailwind CSS** for the frontend, **FastAPI** for the backend, and **PostgreSQL** as the database.
+Nowted is a production-grade collaborative notes application built with React + Tailwind CSS on the frontend, FastAPI on the backend, and PostgreSQL as the primary database.
+It features autosaving, real-time collaboration, and Redis-powered caching and Pub/Sub messaging for low-latency updates across users. Notes can be shared between users using a robust permission system backed by a many-to-many join table.
+
+Designed with scalability and seamless user experience in mind, Nowted combines modern UI, efficient backend architecture, and distributed systems techniques to deliver fast, reliable, and collaborative note-taking.
 
 ## Screen Shot
 
@@ -10,8 +13,8 @@ A full-stack Notes application built with **React** and **Tailwind CSS** for the
 
 
 ## 📚 Table of Contents
-
-- [Demo Video](https://youtu.be/87bEpnDUHAM)
+- [Demo Video](https://youtu.be/-Lb4WKp-o2I)
+- [Demo Video2](https://youtu.be/87bEpnDUHAM)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
@@ -23,17 +26,24 @@ A full-stack Notes application built with **React** and **Tailwind CSS** for the
 
 ## ✨ Features
 
-- User-friendly interface for creating, editing, and deleting notes
-- Responsive design with Tailwind CSS
+- User-friendly interface for creating, editing, and organizing notes
+- Responsive and modern UI built with React and Tailwind CSS
+- Autosaving to ensure no progress is ever lost
+- Real-time collaboration powered by WebSockets and Redis Pub/Sub
+- Redis caching layer for faster responses and reduced database load
+- Secure note sharing between users via a many-to-many join table
 - RESTful API built with FastAPI
-- Data persistence using PostgreSQL
-- Dockerized for easy deployment
+- Reliable data persistence using PostgreSQL
+- Containerized with Docker for easy setup and deployment
+- Scalable architecture decoupling app servers with Redis for horizontal scaling
 
 ## 🛠️ Tech Stack
 
 - **Frontend:** React, Tailwind CSS
 - **Backend:** FastAPI
 - **Database:** PostgreSQL
+- **Caching & Pub/Sub:** Redis
+- **Real-Time Collaboration:** WebSockets
 - **Containerization:** Docker
 
 ## 🚀 Getting Started
