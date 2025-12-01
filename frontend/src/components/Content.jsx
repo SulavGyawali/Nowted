@@ -45,6 +45,41 @@ const Content = (props) => {
     }
   }, [mouseInDots, mouseInSettings]);
 
+  const useNoteWebSocket = (noteId) => {
+    useEffect(() => {
+      if (!noteId) return;
+
+      const ws = new WebSocket(`ws://localhost:8000/websocket/ws/${noteId}`);
+
+      ws.onopen = () => {
+        console.log("WebSocket connection established");
+      }
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data) {
+          setTitle(data.title);
+          setValue(data.description);
+          setFolder(data.folder || "Personal");
+          setFavourite(data.favourite || false);
+          setArchived(data.archive || false);
+          setTrash(data.trash || false);
+          setDate(new Date(data.updated_at).toLocaleDateString("en-US"));
+        }
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket connection closed");
+      };
+
+      return () => {
+        ws.close();
+      };
+    }, [noteId]);
+  };
+
+  useNoteWebSocket(props.currentNoteId); 
+  
+
   const handleSave = () => {
     if (props.currentNoteId) {
       props.setUpdatedNote({

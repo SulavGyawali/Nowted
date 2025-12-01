@@ -59,7 +59,7 @@ async def read_note(
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(oauth2.get_current_user),
 ):
-    redis_key = f"note:{note_id}:user:{current_user.id}"
+    redis_key = f"note:{note_id}"
 
     note_json = redis_client.get(redis_key)
     if note_json:

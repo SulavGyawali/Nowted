@@ -106,12 +106,15 @@ async def buffer_note_update(
     }
 
 
-    key = f"note:{note_id}:user:{current_user.id}"
+    key = f"note:{note_id}"
 
     redis_client.set(key, json.dumps(note_to_buffer))
     redis_client.set(f"{key}:timestamp", str(time()))
 
     redis_client.sadd("pending_note_updates", key)
+
+    channel = f"note_updates:{note_id}"
+    redis_client.publish(channel, json.dumps(note_to_buffer))
 
     return note_to_buffer
 
