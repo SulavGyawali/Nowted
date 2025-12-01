@@ -6,11 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .. import schemas, oauth2, models
 import redis
-import requests
+import os
 
 redis_client = redis.Redis(
-    host="localhost",
-    port=6379,
+    host=os.getenv("REDIS_HOST") or "localhost",
+    port=int(os.getenv("REDIS_PORT") or 6379),
     decode_responses=True
 )
 

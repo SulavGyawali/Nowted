@@ -6,11 +6,13 @@ from sqlalchemy.orm import Session
 from collections import defaultdict
 import redis.asyncio as aioredis
 import json
+import os
 
 router = APIRouter(prefix="/websocket", tags=["websocket"])
+redis_host = os.getenv("REDIS_HOST") or "localhost"
+redis_port = int(os.getenv("REDIS_PORT") or 6379)
 
-redis = aioredis.from_url("redis://localhost")
-
+redis = aioredis.Redis(host=redis_host, port=redis_port, decode_responses=True)
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[int, list[WebSocket]] = defaultdict(list)
