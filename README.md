@@ -1,9 +1,22 @@
-# 📝 Nowted
+# Nowted
 
-Nowted is a production-grade collaborative notes application built with React + Tailwind CSS on the frontend, FastAPI on the backend, and PostgreSQL as the primary database.
-It features autosaving, real-time collaboration, and Redis-powered caching and Pub/Sub messaging for low-latency updates across users. Notes can be shared between users using a robust permission system backed by a many-to-many join table.
+*A modern, real‑time, collaborative notes platform built with a scalable, production‑ready architecture.*
 
-Designed with scalability and seamless user experience in mind, Nowted combines modern UI, efficient backend architecture, and distributed systems techniques to deliver fast, reliable, and collaborative note-taking.
+---
+
+## 🚀 Overview
+Nowted is a **full‑stack, real‑time notes application** designed with modern engineering principles and production‑grade technologies. It supports:
+- **Live collaboration** via WebSockets
+- **Secure multi‑user sharing** with fine‑grained access control
+- **Autosaving with Redis caching** for high responsiveness
+- **JWT authentication (access + refresh tokens)**
+- **Scalable Dockerized architecture** with decoupled services
+- **Clean database modeling** using SQLAlchemy ORM
+- **FastAPI backend + React/Tailwind frontend + PostgreSQL database**
+
+If you're looking for a project showcasing advanced full‑stack engineering, distributed systems concepts, and real‑time web capabilities, this is it.
+
+---
 
 ## Screen Shot
 
@@ -12,102 +25,146 @@ Designed with scalability and seamless user experience in mind, Nowted combines 
 ![Alt Text](/register.png)
 
 
-## 📚 Table of Contents
+## Demo Videos
 - [Demo Video](https://youtu.be/-Lb4WKp-o2I)
 - [Demo Video2](https://youtu.be/87bEpnDUHAM)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
 
-## ✨ Features
+## 🧩 Features
+### 🔴 Real‑Time Collaboration
+- Multi-user simultaneous editing of the same note
+- WebSocket powered live updates
+- Conflict‑free autosaving
 
-- User-friendly interface for creating, editing, and organizing notes
-- Responsive and modern UI built with React and Tailwind CSS
-- Autosaving to ensure no progress is ever lost
-- Real-time collaboration powered by WebSockets and Redis Pub/Sub
-- Redis caching layer for faster responses and reduced database load
-- Secure note sharing between users via a many-to-many join table
-- RESTful API built with FastAPI
-- Reliable data persistence using PostgreSQL
-- Containerized with Docker for easy setup and deployment
-- Scalable architecture decoupling app servers with Redis for horizontal scaling
+### ⚡ Autosaving + Redis Caching
+- Lightning‑fast note syncing
+- Reduced database load
+- Zero-lag editing experience
 
-## 🛠️ Tech Stack
+### 👥 Multi‑User Sharing
+- Share notes with other users
+- Join table **NoteUsers** ensures proper relational design
+- Fine‑grained access control per note
 
-- **Frontend:** React, Tailwind CSS
-- **Backend:** FastAPI
-- **Database:** PostgreSQL
-- **Caching & Pub/Sub:** Redis
-- **Real-Time Collaboration:** WebSockets
-- **Containerization:** Docker
+### 🔐 Authentication & Security
+- JWT **access + refresh tokens**
+- Token verification middleware
+- OAuth2Flow
+- **Password hashing** for secure credential storage
+- Route protection for all private operations
+
+### 🛠 Backend (FastAPI)
+- Modular service-based architecture
+- SQLAlchemy ORM models for Notes, Users, and relationships
+- Pydantic schemas for validation and serialization
+- Organized routers and dependency injection
+
+### 🗄 Database (PostgreSQL)
+- Scalable relational schema
+- Proper normalization & many‑to‑many join tables
+- Indexing-ready for search and expansion
+
+### 🖥 Frontend (React + TailwindCSS)
+- Clean, modern UI
+- Real‑time WebSocket integration
+- Responsive and fast
+
+### 🐳 Dockerized Deployment
+- All services containerized
+- `docker-compose` for orchestration
+- Reproducible and production-ready environment
+
+---
+
+## 🏗 Architecture
+```
+            ┌──────────────────┐        ┌──────────────────┐
+            │     Frontend     │        │     WebSocket     │
+            │ React + Tailwind │◀──────▶│   FastAPI WS      │
+            └─────────▲────────┘        └─────────▲────────┘
+                      │                           │
+                      ▼                           ▼
+              ┌──────────────────┐       ┌──────────────────┐
+              │   REST API       │◀────▶│     Redis Cache   │
+              │     FastAPI      │       └──────────────────┘
+              └─────────▲────────┘
+                        │
+                        ▼
+                ┌──────────────────┐
+                │   PostgreSQL     │
+                │   Database       │
+                └──────────────────┘
+```
+
+---
+
+## 📂 Project Structure
+```
+Nowted/
+├── backend/
+│   ├── routers/
+│   ├── main.py
+│   └── ...
+├── frontend/
+│   ├── src/
+│   ├── components/
+│   └── ...
+├── docker-compose.yml
+└── README.md
+```
+
+---
 
 ## 🚀 Getting Started
+### 📦 Prerequisites
+- Docker & Docker Compose installed
 
-### Prerequisites
-
-Ensure you have the following installed:
-
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-### Installation
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/SulavGyawali/Notes.git
-   cd Notes
-   ```
-
-2. **Build and run the containers:**
-
-   ```bash
-   docker-compose -f docker-compose.yml up --build
-   ```
-
-   This command will set up the frontend, backend, and PostgreSQL database.
-
-3. **Access the application:**
-
-   - Frontend: [http://localhost:3000](http://localhost:3000)
-   - Backend API: [http://localhost:8000](http://localhost:8000)
-   - PostgreSQL : [http://localhost:5432](http://localhost:5432)
-
-## 📖 Usage
-
-- Navigate to the frontend URL to interact with the Notes application.
-- Use the interface to create, edit, and delete notes.
-- The backend API provides endpoints for CRUD operations on notes.
-
-## 🗂️ Project Structure
-
+### ▶ Run the full stack
+```bash
+docker-compose up --build
 ```
-Notes/
-├── backend/
-|    ├──app/               # FastAPI backend
-│    |  ├── main.py            # Entry point for the API
-│    |  └── ...                # Additional backend modules
-|    ├── requirements.txt
-├── frontend/              # React frontend
-│   ├── src/
-│   │   ├── App.jsx        # Main React component
-│   │   └── ...            # Additional frontend components
-├── docker-compose.dev.yml # Docker Compose configuration
-├── Dockerfile             # Dockerfile for containerization
-└── README.md              # Project documentation
-```
+- Frontend will be available at **http://localhost:5173**
+- Backend API at **http://localhost:8000**
 
-## 🤝 Contributing
+---
 
-Contributions are welcome! To contribute:
+## 🧪 API Documentation
+FastAPI provides built‑in docs:
+- Swagger UI → http://localhost:8000/docs
+- ReDoc → http://localhost:8000/redoc
 
-1. Fork the repository.
-2. Create a new branch: `git checkout -b feature/your-feature-name`
-3. Commit your changes: `git commit -m 'Add your feature'`
-4. Push to the branch: `git push origin feature/your-feature-name`
-5. Open a pull request.
+---
+
+## 🛡 Security
+- Passwords hashed using industry‑standard algorithms
+- JWT access tokens for authorization
+- Refresh tokens for session persistence
+- HTTPS‑ready deployment
+
+---
+
+## 📈 Future Improvements
+- CRDT-based conflict resolution
+- Offline notes support
+- Real-time presence indicators
+- Full-text search
+- CI/CD pipeline
+- Testing suite (pytest)
+
+---
+
+## ⭐ Contributing
+Contributions, issues and feature requests are welcome! Feel free to check the issues page.
+
+---
+
+## 🎯 Final Notes
+Nowted is more than a notes app — it's a production‑style real‑time collaboration system built with clean architecture, strong security, and scalable foundations.
+
+If you're using this as a portfolio project, it effectively demonstrates:
+- full-stack engineering
+- distributed systems
+- authentication & security
+- real-time communication
+- database modeling
+
+You're welcome to fork, extend, or deploy it however you like!
