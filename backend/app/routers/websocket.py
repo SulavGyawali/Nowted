@@ -59,4 +59,4 @@ async def websocket_endpoint(
         print(f"WebSocket connection closed: {e}")
     finally:
         manager.disconnect(note_id, websocket)
-        await pubsub.unsubscribe(f"note:{note_id}")
+        await pubsub.unsubscribe(f"note_updates:{note_id}")
