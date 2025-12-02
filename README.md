@@ -79,13 +79,13 @@ If you're looking for a project showcasing advanced full‑stack engineering, di
 
 ```
             ┌──────────────────┐        ┌──────────────────┐
-            │     Frontend     │        │     WebSocket     │
-            │ React + Tailwind │◀──────▶│   FastAPI WS      │
+            │     Frontend     │        │     WebSocket    │
+            │ React + Tailwind │◀─────▶│   FastAPI WS     │
             └─────────▲────────┘        └─────────▲────────┘
                       │                           │
                       ▼                           ▼
               ┌──────────────────┐       ┌──────────────────┐
-              │   REST API       │◀────▶│     Redis Cache   │
+              │   REST API       │◀────▶│     Redis Cache  │
               │     FastAPI      │       └──────────────────┘
               └─────────▲────────┘
                         │
