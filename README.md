@@ -123,7 +123,7 @@ If you're looking for a project showcasing advanced full‑stack engineering, di
 
 
             ┌───────────────────────────┐
-            │       Primary Backend     │
+            │       Primary Backend     │ Get Notes
   ──────────│         (FastAPI)         │─────────────────────
   |         │       Auth, API, CRUD     │                     │
   |         └───────────┬───────────────┘                     │
