@@ -6,6 +6,7 @@ import {
   IoEyeOutline,
 } from "react-icons/io5";
 import axios from "axios";
+
 const Login = (props) => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -17,7 +18,7 @@ const Login = (props) => {
         password: password,
       };
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/login",
+        "http://localhost:8000/auth/login",
         data
       );
       props.setToken(response.data.access_token);

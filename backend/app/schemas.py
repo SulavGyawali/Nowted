@@ -76,3 +76,8 @@ class TokenVerify(BaseModel):
 class NoteShare(BaseModel):
     note_id: int
     user_id: int
+
+class TypingIndicator(BaseModel):
+    note_id: int
+    user_id: int
+    is_typing: bool

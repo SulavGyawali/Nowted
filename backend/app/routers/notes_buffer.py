@@ -1,7 +1,7 @@
 import json
 from time import time, sleep
 import datetime
-from ..database import get_db
+from ..database import get_db, get_mongo_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .. import schemas, oauth2, models
@@ -59,7 +59,7 @@ def flush_redis_to_db(interval=5):
                 note_data = json.loads(note_json)
 
                 if "updated_at" not in note_data:
-                    note_data["updated_at"] = datetime.utcnow().isoformat()
+                    note_data["updated_at"] = datetime.datetime.utcnow().isoformat()
 
                 db = next(get_db())
                 try:
@@ -82,6 +82,7 @@ async def buffer_note_update(
     new_note: schemas.NoteCreate,
     current_user: schemas.User = Depends(oauth2.get_current_user),
     db: Session = Depends(get_db),
+    mongo_db = Depends(get_mongo_db),
 ):
     db_note = (
         db.query(models.Notes)
@@ -92,6 +93,8 @@ async def buffer_note_update(
     if not db_note:
         raise HTTPException(status_code=404, detail="Note not found")
 
+    now = datetime.datetime.utcnow()
+
     note_to_buffer = {
         "id": db_note.id,
         "title": new_note.title,
@@ -101,10 +104,9 @@ async def buffer_note_update(
         "trash": new_note.trash,
         "folder": new_note.folder,
         "created_at": str(db_note.created_at),  # store as ISO string
-        "updated_at": str(datetime.datetime.utcnow()),  # current time as ISO string
+        "updated_at": str(now),  # current time as ISO string
         "user_id": db_note.user_id,
     }
-
 
     key = f"note:{note_id}"
 
@@ -116,5 +118,19 @@ async def buffer_note_update(
     channel = f"note_updates:{note_id}"
     redis_client.publish(channel, json.dumps(note_to_buffer))
 
-    return note_to_buffer
+    try:
+        await mongo_db["note_changes"].insert_one({
+            "note_id": note_id,
+            "user_id": current_user.id,
+            "title": new_note.title,
+            "description": new_note.description,
+            "folder": new_note.folder,
+            "favourite": new_note.favourite,
+            "archive": new_note.archive,
+            "trash": new_note.trash,
+            "changed_at": now,
+        })
+    except Exception as e:
+        print(f"[note change] mongo log failed: {e}")
 
+    return note_to_buffer

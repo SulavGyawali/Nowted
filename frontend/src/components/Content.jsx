@@ -22,8 +22,12 @@ const Content = (props) => {
   const [archived, setArchived] = useState(false);
   const [trash, setTrash] = useState(false);
   const [share, setShare] = useState(false);
+  const [typingUser, setTypingUser] = useState(null);
 
+  const noteWsRef = useRef(null);
   const timeoutRef = useRef(null);
+  const typingWsRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   const handleMouseLeaveDots = () => {
     setMouseInDots(false);
@@ -45,40 +49,81 @@ const Content = (props) => {
     }
   }, [mouseInDots, mouseInSettings]);
 
-  const useNoteWebSocket = (noteId) => {
-    useEffect(() => {
-      if (!noteId) return;
+  // Note updates socket
+  useEffect(() => {
+    if (!props.currentNoteId) return;
 
-      const ws = new WebSocket(`ws://localhost:8000/websocket/ws/${noteId}`);
+    const url = `ws://localhost:8000/websocket/ws/${props.currentNoteId}`;
+    console.log("[note ws] connecting:", url);
+    const ws = new WebSocket(url);
+    noteWsRef.current = ws;
 
-      ws.onopen = () => {
-        console.log("WebSocket connection established");
+    ws.onopen = () => console.log("[note ws] open");
+    ws.onerror = (e) => console.error("[note ws] error", e);
+    ws.onclose = (e) => console.log("[note ws] closed", e.code, e.reason);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data) {
+        setTitle(data.title);
+        setValue(data.description);
+        setFolder(data.folder || "Personal");
+        setFavourite(data.favourite || false);
+        setArchived(data.archive || false);
+        setTrash(data.trash || false);
+        setDate(new Date(data.updated_at).toLocaleDateString("en-US"));
       }
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data) {
-          setTitle(data.title);
-          setValue(data.description);
-          setFolder(data.folder || "Personal");
-          setFavourite(data.favourite || false);
-          setArchived(data.archive || false);
-          setTrash(data.trash || false);
-          setDate(new Date(data.updated_at).toLocaleDateString("en-US"));
-        }
-      };
+    };
 
-      ws.onclose = () => {
-        console.log("WebSocket connection closed");
-      };
+    return () => ws.close();
+  }, [props.currentNoteId]);
 
-      return () => {
-        ws.close();
-      };
-    }, [noteId]);
+  // Typing indicator socket
+  useEffect(() => {
+    if (!props.currentNoteId || props.currentUser?.id == null) {
+      console.log(
+        "[typing ws] skipped — noteId:", props.currentNoteId,
+        "userId:", props.currentUser?.id
+      );
+      return;
+    }
+
+    const url = `ws://localhost:8000/websocket/ws/typing/${props.currentNoteId}/${props.currentUser?.id}`;
+    console.log("[typing ws] connecting:", url);
+    const ws = new WebSocket(url);
+    typingWsRef.current = ws;
+
+    ws.onopen = () => console.log("[typing ws] open");
+    ws.onerror = (e) => console.error("[typing ws] error", e);
+    ws.onclose = (e) => console.log("[typing ws] closed", e.code, e.reason);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.user_id !== props.currentUser?.id) {
+        setTypingUser(data.is_typing ? (data.username || `User ${data.user_id}`) : null);
+      }
+    };
+
+    return () => {
+      ws.close();
+      typingWsRef.current = null;
+      setTypingUser(null);
+    };
+  }, [props.currentNoteId, props.currentUser?.id]);
+
+  const sendTyping = (isTyping) => {
+    if (typingWsRef.current?.readyState === WebSocket.OPEN) {
+      typingWsRef.current.send(JSON.stringify({ is_typing: isTyping }));
+    }
   };
 
-  useNoteWebSocket(props.currentNoteId); 
-  
+  const handleTypingActivity = () => {
+    sendTyping(true);
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => sendTyping(false), 1500);
+  };
+
+
 
   const handleSave = () => {
     if (props.currentNoteId) {
@@ -144,6 +189,7 @@ const Content = (props) => {
   useEffect(() => {
     clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
+      if (!props.currentNote) return;
       if (
         props.currentNote.title !== title ||
         props.currentNote.description !== value ||
@@ -165,8 +211,12 @@ const Content = (props) => {
             <input
               type="text"
               value={title}
+              disabled={!!typingUser}
               className="w-full focus:outline-0"
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                handleTypingActivity();
+              }}
             />
             <CiCircleMore
               className="text-2xl opacity-50 hover:opacity-100 cursor-pointer"
@@ -175,8 +225,7 @@ const Content = (props) => {
             />
             <div
               className={`share text-white w-[15vw] flex flex-col fixed right-0 mr-[20%] 
-                top-10 bg-neutral-800 rounded-lg gap-2  transition-opacity text-xl duration-300   ${
-                  share ? "opacity-100 z-100" : "opacity-0 -z-100"
+                top-10 bg-neutral-800 rounded-lg gap-2  transition-opacity text-xl duration-300   ${share ? "opacity-100 z-100" : "opacity-0 -z-100"
                 }`}
               onMouseLeave={() => setShare(false)}
             >
@@ -203,9 +252,8 @@ const Content = (props) => {
               </div>
             </div>
             <div
-              className={`more text-white w-[15vw] flex flex-col fixed right-0 mr-[3%] mt-1 bg-neutral-800 rounded-lg gap-2  transition-opacity text-lg duration-300   ${
-                showMore ? "opacity-100 z-100" : "opacity-0 -z-100"
-              }`}
+              className={`more text-white w-[15vw] flex flex-col fixed right-0 mr-[3%] mt-1 bg-neutral-800 rounded-lg gap-2  transition-opacity text-lg duration-300   ${showMore ? "opacity-100 z-100" : "opacity-0 -z-100"
+                }`}
               onMouseEnter={handleMouseEnterSettings}
               onMouseLeave={handleMouseLeaveSettings}
             >
@@ -268,20 +316,23 @@ const Content = (props) => {
           <div className="separator w-full h-[0.5px] mx-auto bg-neutral-600 m-3"></div>
 
           <div className="box4 h-[65%]">
+           {typingUser && (
+              <div className="text-sm text-white italic my-2">
+                {typingUser} is typing…
+              </div>
+            )}
             <Editor
               value={value}
+              disabled={!!typingUser}
               onChange={(e) => {
                 setValue(e.target.value);
+                handleTypingActivity();
               }}
-              containerProps={{
-                style: {
-                  background: "none",
-                  border: "none",
-                },
-              }}
+              containerProps={{ style: { background: "none", border: "none" } }}
               style={{ background: "none" }}
               className="ql-editor overflow-y-scroll scrollbar"
-            ></Editor>
+            />
+             
           </div>
         </div>
       ) : (
